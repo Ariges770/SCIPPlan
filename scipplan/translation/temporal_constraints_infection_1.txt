@@ -1,0 +1,1 @@
+Infected * exp((b / (b - c)) * log(1 + (Infected / Susceptible))) * exp(-1.0 * (b / (b - c)) * log(1 + (Infected / Susceptible) * exp((b - c) * Dt))) * exp((b - c) * Dt) <= D

@@ -1,0 +1,4 @@
+Location_x_dash - 1.0*Location_x - 1.0*Speed_x*(Dt + Epsilon*Mode) - 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
+Location_y_dash - 1.0*Location_y - 1.0*Speed_y*(Dt + Epsilon*Mode) - 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
+Speed_x_dash - 1.0*Speed_x - 1.0*Accelerate_x*(Dt + Epsilon*Mode) == 0.0
+Speed_y_dash - 1.0*Speed_y - 1.0*Accelerate_y*(Dt + Epsilon*Mode) == 0.0

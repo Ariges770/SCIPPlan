@@ -1,0 +1,25 @@
+state_continuous: Susceptible
+state_continuous: Infected
+state_continuous: Removed
+
+state_continuous: TotalTime
+
+action_boolean: Lockdown
+action_continuous: Dt
+
+auxiliary_continuous: b
+
+
+constant_continuous: b1
+constant_continuous: b2
+constant_continuous: c
+constant_integer: N
+constant_integer: D
+constant_integer: Makespan
+constant_integer: Epsilon
+constant_integer: Duration
+constant_integer: DurationMin
+constant_integer: DurationMax
+constant_integer: Percentage
+
+constant_integer: InitialInfected

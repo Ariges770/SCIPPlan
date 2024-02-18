@@ -1,0 +1,5 @@
+Susceptible == N - InitialInfected
+Infected == InitialInfected
+Removed == 0.0
+
+TotalTime == 0.0

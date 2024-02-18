@@ -1,0 +1,4 @@
+location_x_dash - 1.0*location_x - 1.0*speed_x*Dt - 0.5*accelerate_x*Dt*Dt == 0.0
+location_y_dash - 1.0*location_y - 1.0*speed_y*Dt - 0.5*accelerate_y*Dt*Dt == 0.0
+speed_x_dash - 1.0*speed_x - 1.0*accelerate_x*Dt == 0.0
+speed_y_dash - 1.0*speed_y - 1.0*accelerate_y*Dt == 0.0

@@ -1,0 +1,6 @@
+Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
+Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
+Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 0.0
+Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 0.0
+
+(Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 4.0) or (Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 6.0) or (Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 4.0) or (Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 6.0)

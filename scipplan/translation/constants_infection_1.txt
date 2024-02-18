@@ -1,0 +1,17 @@
+b1 = 0.2
+b2 = 0.1
+c = 0.15
+N = 2000.0
+D = 150.0
+
+Makespan = 180.0
+
+Epsilon = 1.0
+
+Duration = 100.0
+DurationMin = 30.0
+DurationMax = 90.0
+
+Percentage = 0.8
+
+InitialInfected = 50.0

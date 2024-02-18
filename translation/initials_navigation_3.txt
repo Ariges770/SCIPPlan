@@ -1,0 +1,4 @@
+location_x == 0.0
+location_y == 0.0
+speed_x == 0.0
+speed_y == 0.0

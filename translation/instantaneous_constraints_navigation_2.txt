@@ -1,0 +1,10 @@
+Location_x <= 10.0
+Location_y <= 10.0
+Location_x >= 0.0
+Location_y >= 0.0
+Accelerate_x <= 0.5
+Accelerate_y <= 0.5
+Accelerate_x >= -0.5
+Accelerate_y >= -0.5
+(Location_x <= 2.0) or (Location_x >= 4.0) or (Location_y <= 1.0) or (Location_y >= 5.0)
+(Location_x <= 5.0) or (Location_x >= 7.0) or (Location_y <= 5.0) or (Location_y >= 9.0)

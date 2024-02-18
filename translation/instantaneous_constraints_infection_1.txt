@@ -1,0 +1,12 @@
+b - b1 + Lockdown >= 0.0
+b - b1 - Lockdown <= 0.0
+
+b - b2 + (1 - Lockdown) >= 0.0
+b - b2 - (1 - Lockdown) <= 0.0
+
+
+b <= b1
+b >= b2
+
+Dt >= DurationMin
+Dt <= DurationMax

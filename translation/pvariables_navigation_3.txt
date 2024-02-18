@@ -1,0 +1,7 @@
+action_continuous: accelerate_x
+action_continuous: accelerate_y
+action_continuous: Dt
+state_continuous: location_x
+state_continuous: location_y
+state_continuous: speed_x
+state_continuous: speed_y

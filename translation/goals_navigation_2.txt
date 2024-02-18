@@ -1,0 +1,2 @@
+Location_x == 8.0
+Location_y == 8.0

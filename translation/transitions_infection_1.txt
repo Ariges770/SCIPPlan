@@ -1,0 +1,7 @@
+Susceptible_dash - Susceptible * exp((b / (b - c)) * log(1 + (Infected / Susceptible))) * exp(-1.0 * (b / (b - c)) * log(1 + (Infected / Susceptible) * exp((b - c) * Dt))) == 0.0
+
+Infected_dash - Infected * exp((b / (b - c)) * log(1 + (Infected / Susceptible))) * exp(-1.0 * (b / (b - c)) * log(1 + (Infected / Susceptible) * exp((b - c) * Dt))) * exp((b - c) * Dt) == 0.0
+
+Removed_dash - N + exp((b / (b - c)) * log(Susceptible + Infected)) * exp(-1.0 * (c / (b - c)) * log(Susceptible + Infected * exp((b - c) * Dt))) == 0.0
+
+TotalTime_dash - TotalTime - Dt == 0
