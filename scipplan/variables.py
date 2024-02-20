@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Union
 
 from pyscipopt.scip import Model, Variable as SCIPVariable
 
@@ -12,7 +13,7 @@ class Variable:
     val_type: ValType
     time: int
     model: Model
-    model_var: SCIPVariable | float
+    model_var: Union[SCIPVariable | float]
     
     @classmethod
     def create_var(cls, model: Model, name: str, vtype: str, time: int, const_vals: dict[str, float]) -> Variable:

@@ -1,5 +1,6 @@
 import ast
 import operator as op
+from typing import Union
 
 from .variables import Variable
 
@@ -50,7 +51,7 @@ class EvalParams:
     operators: dict = field(default_factory={})
     parser_type: ParserType = ParserType.PARSER
     rounds_vars: bool = False
-    model: Model | None = None
+    model: Union[Model, None] = None
     add_aux_vars: bool = False
     
     @classmethod
@@ -97,7 +98,7 @@ class ParseModel:
         self.expressions = Expressions("", -1, [], [])
             
         
-    def evaluate(self, eqtn, aux_vars: list | None = None, expr_name: str | None = None, horizon: int = -1):
+    def evaluate(self, eqtn, aux_vars: Union[list, None] = None, expr_name: Union[str, None] = None, horizon: int = -1):
         
         if isinstance(eqtn, str):
             # Reset self.expressions for every new equation evaluated

@@ -1,7 +1,0 @@
-location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt <= 10.0
-location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt <= 10.0
-location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt >= 0.0
-location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt >= 0.0
-(location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt <= 2.0) or (location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt >= 4.0) or (location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt <= 1.0) or (location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt >= 9.0)
-(location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt <= 4.0) or (location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt >= 7.0) or (location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt <= 7.0) or (location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt >= 9.0)
-(location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt <= 4.0) or (location_x + speed_x*Dt + 0.5*accelerate_x*Dt*Dt >= 9.0) or (location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt <= 2.0) or (location_y + speed_y*Dt + 0.5*accelerate_y*Dt*Dt >= 6.0)

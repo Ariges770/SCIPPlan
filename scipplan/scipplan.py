@@ -7,8 +7,9 @@ from .plan_model import PlanModel
 from .variables import VarType
 from .zero_crossing import ZeroCrossing
 from .parse_model import ParseModel as PM
-from .helpers import InfeasibilityError, iterate
+from .helpers import InfeasibilityError, iterate, write_to_csv
 
+from importlib.metadata import version
 from pyscipopt.scip import Model
 
 class SCIPPlan:
@@ -113,7 +114,7 @@ class SCIPPlan:
                             # Keep updating end point until end of zero crossing or end of dt interval
                             cross_interval[1] = time
                         
-                if is_violated and (constraint_eval is True or time + self.config.epsilon >= dt):
+                if is_violated and (constraint_eval is True or time + self.config.epsilon > dt):
                     return ZeroCrossing(
                         is_violated=True,
                         horizon=h,
@@ -136,10 +137,12 @@ class SCIPPlan:
                 print(f"Encoding the problem over horizon h={config.horizon}.")
                 print("Solving the problem.")
                 model.optimize()
+                                
                 solve_time = (time.time() - start_time)
                 # print(f"Total Time: {solve_time: .3f} seconds")
                 print("Problem solved. \n")
                 return model, solve_time 
+                    
             
             except InfeasibilityError:
                 # print("Problem is infeasible for the given horizon.")
@@ -147,7 +150,7 @@ class SCIPPlan:
                 config.increment_horizon()
                 if config.show_output is True:
                     print(f"Horizon Time: {(time.time() - start_time): .3f} seconds")
-            
+        
 
     def save_values(self, iteration: int):
         for (name, h), var in self.plan.variables.items():
@@ -155,12 +158,19 @@ class SCIPPlan:
     
 
 def main():    
-    print(f"SCIP Version: {Model().version()}\n")
+    print(f"SCIP Version: {Model().version()}")
+    print(f"PySCIPOpt Version: {version('pyscipopt')}\n")
     config = Config.get_config()
     print(config)
+  
+    plan, solve_time = SCIPPlan.solve(config)  
     
-    plan, solve_time = SCIPPlan.solve(config)
-    
+    if config.save_sols is True:
+        write_to_csv("new_constraints", plan.new_constraints, config)
+        write_to_csv("results", plan.results_table, config)
+        print("Solutions saved: \n")
+        
+        
     print("Plan: ")
     
     # Get action variable names

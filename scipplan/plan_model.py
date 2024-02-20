@@ -3,11 +3,19 @@ from .variables import Variable, VarType
 from .parse_model import ParseModel as PM, EvalParams
 from .helpers import list_accessible_files
 
-from pyscipopt.scip import Model
-from pyscipopt import quicksum, exp, log, sqrt, sin, cos
-
 import math
 import os
+
+from pyscipopt.scip import Model
+from pkg_resources import parse_version
+from importlib.metadata import version
+
+if parse_version(version("pyscipopt")) >= parse_version("4.3.0"):
+    from pyscipopt import quicksum, exp, log, sqrt, sin, cos
+    allow_trig_funcs = True
+else:
+    from pyscipopt import quicksum, exp, log, sqrt 
+    allow_trig_funcs = False
 
 class PlanModel:
     def __init__(self, config: Config) -> None:
@@ -29,7 +37,7 @@ class PlanModel:
         for h in range(self.config.horizon):
             dt_var = self.variables[(self.config.dt_var, h)].model_var
             self.model.addCons(dt_var >= 0.0, f"dt_{h}_lower_bound")
-            self.model.addCons(dt_var <= self.config.bigM, f"dt_{h}_upper_bound")
+            self.model.addCons(dt_var <= self.config.bigM, f"dt_{h}_upper_bound")   
     
 
         
@@ -37,7 +45,8 @@ class PlanModel:
         constants = {}
         translation = "constants"
         config_vals = {
-            "config_horizon": self.config.horizon,
+            # Since horizon can be incremented without this value being updated, it will be removed for the time being
+            # "config_horizon": self.config.horizon,
             "config_epsilon": self.config.epsilon,
             "config_gap": self.config.gap,
             "config_bigM": self.config.bigM
@@ -62,6 +71,8 @@ class PlanModel:
                 constants[var] = val
                 self.var_names.add(var)
                 
+        constants["bigM"] = self.config.bigM
+        self.var_names.add("bigM")
         return constants
                 
         
@@ -73,7 +84,6 @@ class PlanModel:
                 var_type = variables[(constant, t)].var_type
                 
         translation = "pvariables"
-        
         with open(self.get_file_path(translation)) as f:
             for line in f.readlines():
                 
@@ -157,7 +167,6 @@ class PlanModel:
         translation = "reward"
         with open(self.get_file_path(translation)) as f:
             reward = f.readline().rstrip("\n")
-            
             for t in range(self.config.horizon):
                 objectives[t] = self.model.addVar(f"Obj_{t}", vtype="C", lb=None, ub=None)
                 # For the sake of similarity the reward is similar to constraint parsing, however, only one reward function is allowed
@@ -165,7 +174,7 @@ class PlanModel:
                 for expr_idx, expr in enumerate(exprs):
                     self.model.addCons(objectives[t] == expr, f"Obj_{t}_{expr_idx}")
                 
-            self.model.setObjective(quicksum(objectives), sense="maximize")
+            self.model.setObjective(quicksum(objectives), "maximize")
             
         return objectives
             
@@ -176,9 +185,11 @@ class PlanModel:
             "exp": exp, 
             "log": log, 
             "sqrt": sqrt, 
-            "sin": sin, 
-            "cos": cos,
         }
+        if allow_trig_funcs:
+            functions["sin"] = sin 
+            functions["cos"] = cos 
+            
         variables = {}
         operators = {}
         if is_goal:
@@ -203,9 +214,11 @@ class PlanModel:
             "exp": math.exp, 
             "log": math.log, 
             "sqrt": math.sqrt, 
-            "sin": math.sin, 
-            "cos": math.cos,
         }
+        if allow_trig_funcs:
+            functions["sin"] = math.sin 
+            functions["cos"] = math.cos
+        
         variables = {}
         operators = {}
         for name in self.var_names:
@@ -234,10 +247,11 @@ class PlanModel:
         pkg_files_path = os.path.join(os.path.dirname(__file__), "translation")
         pkg_files = list_accessible_files(pkg_files_path)
         
-        if path in pkg_files:
-            return os.path.join(pkg_files_path, path)
-        elif path in usr_files:
+        
+        if path in usr_files:
             return os.path.join(usr_files_path, path)
+        elif path in pkg_files:
+            return os.path.join(pkg_files_path, path)
         else:
             raise Exception("Unkown file name, please enter a configuration for a valid domain instance in translation: ")
         

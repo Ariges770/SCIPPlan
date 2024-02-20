@@ -12,52 +12,37 @@ setup(
     description="Metric Hybrid Factored Planning in Nonlinear Domains with Constraint Generation in Python.",
     long_description=readme(),
     long_description_content_type="text/markdown",
+    license="MIT License",
     author=scipplan.__author__,
     author_email=scipplan.__email__,
     packages=find_packages(),  # Automatically find all packages
     include_package_data=True,
     package_data={
-        "": ["translation/*.txt"], 
-        # "scipplan": ["translation/*.txt"]
+        # "": ["translation/*.txt"], 
+        "scipplan": ["translation/*.txt"]
         },
     install_requires=[
-        "PySCIPOpt>=4.3.0"
+        # "PySCIPOpt>=4.3.0"
+        # "pyscipopt>=4.0.0"
     ],
     entry_points={
         'console_scripts': [
             'scipplan = scipplan.scipplan:main',  # Specify the entry point
         ],
     },
+    keywords=["scip", "automated planner"],
+    zip_safe=False,
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence"
+    ]
 )
 
 
 
-# setup(
-#     name="scipplan",
-#     version=scipplan.__version__,
-#     author="Ari Gestetner, Dr. Buser Say",
-#     author_email="ages0001@student.monash.edu",
-#     description="Metric Hybrid Factored Planning in Nonlinear Domains with Constraint Generation in Python.",
-#     long_description=read_file("README.md"),
-#     long_description_content_type="text/markdown",
-#     license="MIT License",
-#     keywords=["scip", "automated planner"],
-#     url="https://github.com/",
-#     packages=find_packages(),
-#     scripts=["scripts/scipplan"],
-#     install_requires=[
-#         "PySCIPOpt"
-#     ],
-#     include_package_data=True,
-#     zip_safe=False,
-#     classifiers=[
-#         "Development Status :: 3 - Alpha",
-#         "Environment :: Console",
-#         "Intended Audience :: Science/Research",
-#         "License :: OSI Approved :: MIT License",
-#         "Natural Language :: English",
-#         "Operating System :: OS Independent",
-#         "Programming Language :: Python :: 3",
-#         "Topic :: Scientific/Engineering :: Artificial Intelligence"
-#     ],
-# )

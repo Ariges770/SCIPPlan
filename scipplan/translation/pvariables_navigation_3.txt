@@ -1,7 +1,8 @@
-action_continuous: accelerate_x
-action_continuous: accelerate_y
+action_continuous: Accelerate_x
+action_continuous: Accelerate_y
+action_boolean: Mode
 action_continuous: Dt
-state_continuous: location_x
-state_continuous: location_y
-state_continuous: speed_x
-state_continuous: speed_y
+state_continuous: Location_x
+state_continuous: Location_y
+state_continuous: Speed_x
+state_continuous: Speed_y

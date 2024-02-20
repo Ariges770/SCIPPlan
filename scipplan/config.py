@@ -17,6 +17,7 @@ class Config:
     epsilon: float = field(default=None)
     gap: float = field(default=None)
     show_output: bool = False
+    save_sols: bool = False
     bigM: float = 1000.0
     dt_var: str = "Dt"
     _defaults: dict[str, bool] = field(default_factory=dict, repr=False)
@@ -50,7 +51,8 @@ class Config:
         Configuration:
         
         Display SCIP Output: {self.show_output}
-        Dt variable name: {self.dt_var}
+        Save Solutions: {self.show_output}
+        Dt Variable Name: {self.dt_var}
         
         Domain (str): {self.domain}
         Instance (int): {self.instance}
@@ -68,7 +70,6 @@ class Config:
     
     @classmethod
     def get_config(cls) -> Config:
-        # TODO: Add proper descriptions for the program
         parser = argparse.ArgumentParser(
             prog="SCIPPlan"
         )
@@ -77,7 +78,7 @@ class Config:
             "--domain", 
             required=True,
             type=str,
-            help="This variable is the name of the domain (e.g. infection or navigation)"
+            help="This variable is the name of the domain (e.g. pandemic or navigation)"
         )
         parser.add_argument(
             "-I", 
@@ -132,6 +133,13 @@ class Config:
             action="store_true", 
             default=False, 
             help="Include this flag to show output from SCIP"
+        )
+        
+        parser.add_argument(
+            "--save-sols", 
+            action="store_true", 
+            default=False, 
+            help="Include this flag to save the solutions from each of the scipplan iterations as well as constraints generated (note, only saves for horizon which has been solved)"
         )
         
         args = parser.parse_args()

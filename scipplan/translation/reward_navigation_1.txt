@@ -1,1 +1,1 @@
--(1.0 * Dt + Mode * Epsilon)
+(-1.0 * Dt + Mode * Epsilon)

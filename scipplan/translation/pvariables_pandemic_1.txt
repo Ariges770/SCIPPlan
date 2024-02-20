@@ -1,0 +1,12 @@
+state_continuous: Susceptible
+state_continuous: Infected
+state_continuous: Removed
+
+state_continuous: TotalTime
+
+action_boolean: Lockdown
+action_continuous: Dt
+
+auxiliary_continuous: b
+
+ 
