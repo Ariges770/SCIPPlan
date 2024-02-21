@@ -162,5 +162,3 @@ If you are using SCIPPlan, please cite the papers [1,2,3] and the underlying SCI
 [4] [SCIP](https://www.scipopt.org/)
 
 [5] [PySCIPOpt](https://github.com/SCIP-Interfaces/PySCIPOpt)
-
-[6] Martin Bohner, Sabrina Streipert, Delfim F. M. Torres [Exact Solution to a Dynamic SIR Model](https://doi.org/10.1016/j.nahs.2018.12.005)

@@ -1,0 +1,59 @@
+SCIPPlan Version: 0.1.0alpha33
+SCIP Version: 8.04
+PySCIPOpt Version: 4.4.0
+
+Horizon is not provided, and is set to 1
+Epsilon is not provided, and is set to 0.1
+Gap is not provided, and is set to 10.0%
+
+Configuration:
+
+Display SCIP Output: False
+Save Solutions: False
+Dt Variable Name: Dt
+
+Domain (str): navigation
+Instance (int): 2
+Horizon (int): 1 (default)
+Epsilon (float): 0.1 (default)
+Gap (float): 10.0% (default)
+BigM (float): 1000.0
+
+Encoding the problem over horizon h=1.
+Solving the problem.
+Horizon of h=1 is infeasible, incrementing to h=2
+Encoding the problem over horizon h=2.
+Solving the problem.
+Horizon of h=2 is infeasible, incrementing to h=3
+Encoding the problem over horizon h=3.
+Solving the problem.
+Horizon of h=3 is infeasible, incrementing to h=4
+Encoding the problem over horizon h=4.
+Solving the problem.
+Problem solved. 
+
+Solutions saved: 
+
+Plan: 
+Accelerate_x at step 0 by value 0.443
+Accelerate_y at step 0 by value 0.116
+Mode at step 0 by value 0.000
+Dt at step 0 by value 4.151 
+
+Accelerate_x at step 1 by value -0.500
+Accelerate_y at step 1 by value 0.500
+Mode at step 1 by value 1.000
+Dt at step 1 by value 0.596 
+
+Accelerate_x at step 2 by value -0.500
+Accelerate_y at step 2 by value 0.500
+Mode at step 2 by value 0.000
+Dt at step 2 by value 2.081 
+
+Accelerate_x at step 3 by value 0.195
+Accelerate_y at step 3 by value 0.500
+Mode at step 3 by value 1.000
+Dt at step 3 by value 1.538 
+
+Total reward: -8.566
+Total time: 628.571
