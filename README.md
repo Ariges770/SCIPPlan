@@ -82,6 +82,7 @@ The constants file allows for constant values to be defined as a variable to be 
 ```txt
 HalfVal = 0.5
 Epsilon = config_epsilon
+bigM = config_bigM
 ```  
 
 Some config values can be accessed in the constants file to be used in other files and are available as 
@@ -93,9 +94,14 @@ Note that these variables are only accessible in the constants file and you will
 ### Pvariables
 When creating the pvariables file, the variables should be listed in the following format
 ```txt
-state_continuous: Speed_x
+action_continuous: Accelerate_x
+action_continuous: Accelerate_y
 action_continuous: Dt
 action_boolean: Mode
+state_continuous: Location_x
+state_continuous: Location_y
+state_continuous: Speed_x
+state_continuous: Speed_y
 ```
 where the variable and value type of the variable is set in the format "{variable type}_{value type}" and the variable itself has to be in a Python compatible format (e.g. variables can't use - sign like `some-var` but can use _ like `some_var` as well as the dash sign ' cannot be used). The use of next state variables which is often written using the dash symbol will be explained further in the Transitions section.  
 Additionally a variable for Dt has to be defined and has to be the same as the dt_var in the config object so if you would like to use a different variable name for Dt (e.g. dt) please also ensure you add it to the config via the `--dt-var` tag or the `dt_var` parameter.  
@@ -114,39 +120,75 @@ Please note that constants don't need to have their variable names defined in pv
 ### Initials
 The initials file defines the initial state values for time t=0, for example
 ```txt
-Population == HalfVal * 10000
+Location_x == 0.0
+Location_y == 0.0
+Speed_x == 0.0
+Speed_y == 0.0
 ```
 notice te use of teh constant value defined earlier in the constants file.
 ### Goals
 The goals file should encode the final state values such that t=H+1, for example
 ```txt
-Population == 10000
+Location_x == 8.0
+Location_y == 8.0
 ```
 ### Instantaneous Constraints
 This is where the instantaneous constraints go.
 An example is as follows
 ```txt
-(Location_x <= 4.0) or (Location_x >= 6.0)
+Location_x <= 10.0
+Location_y <= 10.0
+Location_x >= 0.0
+Location_y >= 0.0
+Accelerate_x <= 0.5
+Accelerate_y <= 0.5
+Accelerate_x >= -0.5
+Accelerate_y >= -0.5
+(Location_x <= 4.0) or (Location_x >= 6.0) or (Location_y <= 4.0) or (Location_y >= 6.0)
 ```
 ### Temporal Constraints
 The temporal constraints are the constraints which SCIPPlan will ensure that the solution never violates by iterating through every epsilon value of Dt and checking for zero crossings. An example of a temporal constraint is as follows
 ```txt
-Location_x + Speed_x*Dt + 0.5*Accelerate_x*Dt*Dt <= 10.0
+Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
+
+Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
+
+Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 0.0
+
+Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 0.0
+
+
+((Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 4.0) or 
+
+(Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 6.0) or 
+
+(Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 4.0) or 
+
+(Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 6.0))
 ```
+
+The use of mode switches are used in these constraints (`Dt + Epsilon*Mode`). Please note that the or expression is enclosed in round brackets which allows the constraints to be parsed as a singular expression
 ### Transitions
 Transitions are to be added here with the following syntax.  
 For example $S_{t+1} = \frac 12 A_t\cdot t^2 + V_t\cdot t + S_t$.  
 Alternatively this can be written as $S' = \frac 12 A\cdot t^2 + V\cdot t + S$.
 Since Python doesn't allow variables to use the ' symbol it should be replaced with `_dash`, for example
 ```txt
-Location_x_dash - 1.0*Location_x - 1.0*Speed_x*Dt - 0.5*Accelerate_x*Dt*Dt == 0.0
+Location_x_dash - 1.0*Location_x - 1.0*Speed_x*(Dt + Epsilon*Mode) - 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
+
+Location_y_dash - 1.0*Location_y - 1.0*Speed_y*(Dt + Epsilon*Mode) - 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
+
+Speed_x_dash - 1.0*Speed_x - 1.0*Accelerate_x*(Dt + Epsilon*Mode) == 0.0
+
+Speed_y_dash - 1.0*Speed_y - 1.0*Accelerate_y*(Dt + Epsilon*Mode) == 0.0
 ```
 
 ### Reward
 As for the reward function, SCIPPlan maximises the reward thus if using a cost function it should be negated as per the example
 ```txt
--1.0*Dt
+-1.0*(Dt + Mode * Epsilon)
 ```
+Only one reward function is able to be optimised for in SCIPPlan
 
 ## Citation
 

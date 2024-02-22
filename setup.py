@@ -7,8 +7,8 @@ def readme():
         return f.read()
 
 setup(
-    name='scipplan',  # Replace with your package name
-    version=scipplan.__version__,  # Set your desired version
+    name='scipplan', 
+    version=scipplan.__version__, 
     description="Metric Hybrid Factored Planning in Nonlinear Domains with Constraint Generation in Python.",
     long_description=readme(),
     long_description_content_type="text/markdown",
@@ -27,7 +27,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'scipplan = scipplan.scipplan:main',  # Specify the entry point
+            'scipplan = scipplan.scipplan:main',  # Entry point
         ],
     },
     keywords=["scip", "automated planner"],
