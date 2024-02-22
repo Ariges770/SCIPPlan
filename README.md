@@ -150,20 +150,13 @@ Accelerate_y >= -0.5
 The temporal constraints are the constraints which SCIPPlan will ensure that the solution never violates by iterating through every epsilon value of Dt and checking for zero crossings. An example of a temporal constraint is as follows
 ```txt
 Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
-
 Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
-
 Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 0.0
-
 Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 0.0
 
-
 ((Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 4.0) or 
-
 (Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 6.0) or 
-
 (Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 4.0) or 
-
 (Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 6.0))
 ```
 
@@ -175,11 +168,8 @@ Alternatively this can be written as $S' = \frac 12 A\cdot t^2 + V\cdot t + S$.
 Since Python doesn't allow variables to use the ' symbol it should be replaced with `_dash`, for example
 ```txt
 Location_x_dash - 1.0*Location_x - 1.0*Speed_x*(Dt + Epsilon*Mode) - 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
-
 Location_y_dash - 1.0*Location_y - 1.0*Speed_y*(Dt + Epsilon*Mode) - 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
-
 Speed_x_dash - 1.0*Speed_x - 1.0*Accelerate_x*(Dt + Epsilon*Mode) == 0.0
-
 Speed_y_dash - 1.0*Speed_y - 1.0*Accelerate_y*(Dt + Epsilon*Mode) == 0.0
 ```
 
