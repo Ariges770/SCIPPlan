@@ -218,53 +218,17 @@ class ParseModel:
         raise Exception("Unknown ast type")
 
 
-functions = {
-    'exp': exp, 
-    'log': log, 
-    'sqrt': sqrt, 
-    'sin': sin, 
-    'cos': cos,
-}
-variables = {
-    'c': 0.15, 
-    'Removed': 634.9055920077616, 
-    'Removed_dash': 1811.3128718631383, 
-    'b2': 0.1, 
-    'Makespan': 180.0, 
-    'Susceptible': 1218.7473517769768, 
-    'Susceptible_dash': 87.1003300803328, 
-    'DurationMax': 90.0, 
-    'N': 2000.0, 
-    'Dt': 0.0, 
-    'Infected': 146.34705621526638, 
-    'Infected_dash': 101.58679805652946, 
-    'TotalTime': 90.87927389935685, 
-    'TotalTime_dash': 136.34829117841537, 
-    'b': 0.19999999999999973, 
-    'Epsilon': 1.0, 
-    'Percentage': 0.8, 
-    'DurationMin': 30.0, 
-    'b1': 0.2, 
-    'Duration': 100.0, 
-    'D': 150.0, 
-    'InitialInfected': 50.0, 
-    'Lockdown': 0.0
-}
-
-constraint = "Infected * exp((b / (b - c)) * log(1 + (Infected / Susceptible))) * exp(-1.0 * (b / (b - c)) * log(1 + (Infected / Susceptible) * exp((b - c) * Dt))) * exp((b - c) * Dt) <= D"
-
-
 
 if __name__ == "__main__":
-    params = EvalParams.as_calculator(variables, functions, {})
-    calc = ParseModel(params).evaluate
+    # params = EvalParams.as_calculator(variables, functions, {})
+    # calc = ParseModel(params).evaluate
     
-    print(calc(constraint))
+    # print(calc(constraint))
     eqtns = """
 1 + 2
 1 + 5 < 5    
 """
-    print(calc(eqtns))
+    print((eqtns))
 #     print(calc(
 # """
 # a >= b if a + b + c >= 5 else a - b - c == 10

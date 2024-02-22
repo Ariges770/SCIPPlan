@@ -12,7 +12,7 @@ class Config:
     Alternatively, the `get_config` class method will return a config instance using variables set by the programs args (e.g. -D 'domain').
     """
     domain: str
-    instance: int
+    instance: str
     horizon: int = field(default=None)
     epsilon: float = field(default=None)
     gap: float = field(default=None)
@@ -55,7 +55,7 @@ class Config:
         Dt Variable Name: {self.dt_var}
         
         Domain (str): {self.domain}
-        Instance (int): {self.instance}
+        Instance (str): {self.instance}
         Horizon (int): {self.horizon} {'(default)' if self._defaults['horizon'] is True else ''}
         Epsilon (float): {self.epsilon} {'(default)' if self._defaults['epsilon'] is True else ''}
         Gap (float): {self.gap * 100}% {'(default)' if self._defaults['gap'] is True else ''}
@@ -84,7 +84,7 @@ class Config:
             "-I", 
             "--instance", 
             required=True,
-            type=int,
+            type=str,
             help="This is the instance number of the domain (e.g. navigation has instances 1, 2 and 3)"
         )
         parser.add_argument(
