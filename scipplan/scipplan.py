@@ -130,12 +130,13 @@ class SCIPPlan:
      
     @classmethod
     def solve(cls, config: Config) -> tuple[SCIPPlan, float]:
+        # Time total solve time including incrementing horizon
+        start_time = time.time()
         while True:
             model = SCIPPlan(config)
-            start_time = time.time()
             try:
-                print(f"Encoding the problem over horizon h={config.horizon}.")
-                print("Solving the problem.")
+                print(f"Encoding the problem over horizon h={config.horizon}")
+                print("Solving the problem")
                 model.optimize()
                                 
                 solve_time = (time.time() - start_time)
@@ -144,7 +145,16 @@ class SCIPPlan:
                 return model, solve_time 
                     
             
-            except InfeasibilityError:
+            except InfeasibilityError:    
+                if config.get_defaults().get("horizon") is False:
+                    print(f"Horizon of h={model.config.horizon} is infeasible")
+
+                    solve_time = (time.time() - start_time)
+                    print(f"Total time: {solve_time:.3f}")
+
+                    raise InfeasibilityError
+                    
+                
                 # print("Problem is infeasible for the given horizon.")
                 print(f"Horizon of h={model.config.horizon} is infeasible, incrementing to h={model.config.horizon + 1}")
                 config.increment_horizon()
@@ -162,8 +172,11 @@ def main():
     print(f"PySCIPOpt Version: {version('pyscipopt')}\n")
     config = Config.get_config()
     print(config)
-  
-    plan, solve_time = SCIPPlan.solve(config)  
+    
+    try:
+        plan, solve_time = SCIPPlan.solve(config)  
+    except InfeasibilityError:
+        return None
     
     if config.save_sols is True:
         write_to_csv("new_constraints", plan.new_constraints, config)

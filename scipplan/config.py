@@ -67,6 +67,8 @@ class Config:
         self._defaults["horizon"] = False
         self.horizon += value
         
+    def get_defaults(self) -> dict[str, bool]:
+        return self._defaults
     
     @classmethod
     def get_config(cls) -> Config:
