@@ -135,8 +135,8 @@ class SCIPPlan:
         while True:
             model = SCIPPlan(config)
             try:
-                print(f"Encoding the problem over horizon h={config.horizon}")
-                print("Solving the problem")
+                print(f"Encoding the problem over horizon h={config.horizon}.")
+                print("Solving the problem.")
                 model.optimize()
                                 
                 solve_time = (time.time() - start_time)
@@ -147,7 +147,7 @@ class SCIPPlan:
             
             except InfeasibilityError:    
                 if config.get_defaults().get("horizon") is False:
-                    print(f"Horizon of h={model.config.horizon} is infeasible")
+                    print(f"Horizon of h={model.config.horizon} is infeasible.")
 
                     solve_time = (time.time() - start_time)
                     print(f"Total time: {solve_time:.3f}")
@@ -156,10 +156,10 @@ class SCIPPlan:
                     
                 
                 # print("Problem is infeasible for the given horizon.")
-                print(f"Horizon of h={model.config.horizon} is infeasible, incrementing to h={model.config.horizon + 1}")
+                print(f"Horizon of h={model.config.horizon} is infeasible, incrementing to h={model.config.horizon + 1}.")
                 config.increment_horizon()
                 if config.show_output is True:
-                    print(f"Horizon Time: {(time.time() - start_time): .3f} seconds")
+                    print(f"Horizon Time: {(time.time() - start_time): .3f} seconds.")
         
 
     def save_values(self, iteration: int):
@@ -198,9 +198,9 @@ def main():
         for action_name in action_names:
             if action_name == config.dt_var:
                 continue
-            print(f"{action_name} at step {step} by value {plan.scip_model.getVal(plan.plan.variables[(action_name, step)].model_var):.3f}")
+            print(f"{action_name} at step {step} by value {plan.scip_model.getVal(plan.plan.variables[(action_name, step)].model_var):.3f}.")
         
-        print(f"Dt at step {step} by value {plan.scip_model.getVal(plan.plan.variables[('Dt', step)].model_var):.3f} \n")
+        print(f"Dt at step {step} by value {plan.scip_model.getVal(plan.plan.variables[('Dt', step)].model_var):.3f}. \n")
     
     print(f"Total reward: {(plan.scip_model.getObjVal()):.3f}")
     print(f"Total time: {solve_time:.3f}")

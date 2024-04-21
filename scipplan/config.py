@@ -32,17 +32,17 @@ class Config:
             "gap": False
         }
         if self.horizon is None:
-            print("Horizon is not provided, and is set to 1")
+            print("Horizon is not provided, and is set to 1. ")
             self.horizon = 1
             self._defaults["horizon"] = True
             
         if self.epsilon is None:
-            print("Epsilon is not provided, and is set to 0.1")
+            print("Epsilon is not provided, and is set to 0.1. ")
             self.epsilon = 0.1
             self._defaults["epsilon"] = True
             
         if self.gap is None:
-            print("Gap is not provided, and is set to 10.0%")
+            print("Gap is not provided, and is set to 10.0%. ")
             self.gap = 0.1
             self._defaults["gap"] = True
             
@@ -64,7 +64,7 @@ class Config:
         return dedent(text)
     
     def increment_horizon(self, value: int = 1):
-        self._defaults["horizon"] = False
+        # self._defaults["horizon"] = False
         self.horizon += value
         
     def get_defaults(self) -> dict[str, bool]:
