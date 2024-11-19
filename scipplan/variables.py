@@ -26,6 +26,8 @@ class Variable:
             var_type = VarType.AUX
         elif "constant" in vtype:
             var_type = VarType.CONSTANT
+        elif "global" in vtype:
+            var_type = VarType.GLOBAL
         else: # var type isn't recognised
             raise Exception("Unknown variable type: ")
         
@@ -44,7 +46,7 @@ class Variable:
         if var_type is VarType.CONSTANT:
             model_var = const_vals[name]
         else:
-            model_var = model.addVar(name=f"{name}_{time}", vtype=val_type.value, lb=None, ub=None)
+            model_var = model.addVar(name=f"{name}_{time}_{var_type.value}", vtype=val_type.value, lb=None, ub=None)
         
         var = Variable(
             name=name,
@@ -60,6 +62,7 @@ class Variable:
     def to_dict(self):
         if self.var_type is VarType.CONSTANT:
             var_val = self.model_var
+            # Since SCIP has no constant variable, set the value type to None
             val_type = None
         else:
             val_type = self.val_type.name
@@ -84,6 +87,7 @@ class VarType(Enum):
     STATE = "state"
     AUX = "auxiliary"
     CONSTANT = "constant"
+    GLOBAL = "global"
 
 class ValType(Enum):
     CONTINUOUS = "C"
