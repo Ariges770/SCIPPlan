@@ -10,13 +10,44 @@ from math import exp, log, sqrt, sin, cos, isclose
 
 from pyscipopt.scip import Model, SumExpr
 
-def switch_comparator(comparator):
-    if isinstance(comparator, ast.Eq): return ast.NotEq()
-    if isinstance(comparator, ast.NotEq): return ast.Eq()
-    if isinstance(comparator, ast.Lt): return ast.Gt()
-    if isinstance(comparator, ast.LtE): return ast.GtE()
-    if isinstance(comparator, ast.Gt): return ast.Lt()
-    if isinstance(comparator, ast.GtE): return ast.LtE()
+
+def linearise(expr: ast.Compare, aux_var: Variable) -> tuple[ast.Compare, ast.Compare]:
+    if not isinstance(expr.ops[0], (ast.Lt, ast.LtE, ast.Gt, ast.GtE)):
+        raise Exception("Only <, <=, > or >= are allowed")
+    if isinstance(expr.ops[0], ast.GtE):
+        expr.left, expr.comparators[0] = expr.comparators[0], expr.left
+        expr.ops[0] = ast.LtE()
+    if isinstance(expr.ops[0], ast.Gt):
+        expr.left, expr.comparators[0] = expr.comparators[0], expr.left
+        expr.ops[0] = ast.Lt()
+    
+    if isinstance(expr.ops[0], ast.LtE):
+        lhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"feastol - bigM + {aux_var.name} * bigM").body[0].value
+        )
+        rhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"{aux_var.name} * bigM").body[0].value
+        )
+    if isinstance(expr.ops[0], ast.Lt):
+        lhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"{aux_var.name} * bigM - bigM").body[0].value
+        )
+        rhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"{aux_var.name} * bigM - feastol").body[0].value
+        )
+    expr1 = ast.Compare(lhs, [ast.LtE()], [expr.left])
+    expr2 = ast.Compare(expr.left, [ast.LtE()], [rhs])
+    return expr1, expr2
+    
+
 
 @dataclass
 class Expressions:
@@ -152,22 +183,11 @@ class ParseModel:
                             aux_vars.append(aux_var)
                             self.variables[aux_var.name] = aux_var.model_var
                             
-                            expr.left = ast.BinOp(
-                                left=expr.left, 
-                                op=(ast.Add() if isinstance(expr.ops[0], (ast.Gt, ast.GtE)) else ast.Sub()), 
-                                right=ast.parse(f"bigM * {aux_var.name}").body[0].value
-                            )
-                            self.expressions.add_expressions(self.evaluate(expr))
+                            expr1, expr2 = linearise(expr, aux_var)
                             
-                            expr.ops[0] = switch_comparator(expr.ops[0])
-                            
-                            expr.comparators[0] = ast.BinOp(
-                                left=expr.comparators[0], 
-                                op=(ast.Add() if isinstance(expr.ops[0], (ast.Gt, ast.GtE)) else ast.Sub()), 
-                                right=ast.parse(f"feastol - bigM").body[0].value
-                            )
-                            
-                            self.expressions.add_expressions(self.evaluate(expr))
+                            self.expressions.add_expressions(self.evaluate(expr1))
+                            self.expressions.add_expressions(self.evaluate(expr2))
+
                         else:
                             raise Exception("or expressions may only be made up of inequalities")
                     lhs = SumExpr()
