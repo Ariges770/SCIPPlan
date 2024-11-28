@@ -94,17 +94,13 @@ class PlanModel:
                 vtype, name = vtype.strip(), name.strip()
                 
                 self.var_names.add(name)
-                if "global" not in vtype:
-                    for t in range(self.config.horizon):
-                        variables[(name, t)] = Variable.create_var(self.model, name, vtype, t, self.constants)
-                        var_type = variables[(name, t)].var_type
-                    if var_type is VarType.STATE:
-                        variables[(name, self.config.horizon)] = Variable.create_var(self.model, name, vtype, self.config.horizon, self.constants)
-                else:
-                    var = Variable.create_var(self.model, name, vtype, "global", self.constants)
-                    for t in range(self.config.horizon + 1):
-                        variables[(name, t)] = var
-
+                
+                for t in range(self.config.horizon):
+                    variables[(name, t)] = Variable.create_var(self.model, name, vtype, t, self.constants)
+                    var_type = variables[(name, t)].var_type
+                if var_type is VarType.STATE:
+                    variables[(name, self.config.horizon)] = Variable.create_var(self.model, name, vtype, self.config.horizon, self.constants)
+                    
         return variables
                 
          
