@@ -12,8 +12,32 @@ from pyscipopt.scip import Model, SumExpr
 
 
 def linearise(expr: ast.Compare, aux_var: Variable) -> tuple[ast.Compare, ast.Compare]:
+    """linearise
+    This function linearises an inequality using an auxilary variable
+    
+    The linearisation process is as follows.
+    If the expression is of the form of E1 <= E2, then we linearise by using the following expressions.
+    z=0 ==> E1 <= E2 and z=1 ==> E1 > E2 (equivalent to E1 >= E2 + feastol). This is then equivalent to,
+    E2 + feastol - M + z*M <= E1 <= E2 + zM.
+    
+    Similarly, for E1 < E2 we have z=0 ==> E1 < E2 which is equivalent to E1 <= E2 - feastol + z*M 
+    and z=1 ==> E1 >= E2.
+    Thus for E1 < E2 we have,
+    E2 + z*M - M <= E1 <= E2 + z*M - feastol.
+    
+    If, however, the inequality is of the form of E1 >= E2 then we evaluate the expression, E2 <= E1.
+    Similarly, if the expression is E1 > E2 then we evaluate the expression E2 < E1.
+    
+    :param expr: An inequality expression which is linearised.
+    :type expr: ast.Compare
+    :param aux_var: An auxiliary variable used when linearising the inequality to determine if the expression is true or false.
+    :type aux_var: Variable
+    :raises ValueError: If expr is not a valid inequality (i.e. doesn't use <, <=, > and >=)
+    :return: both the linearised inequalities
+    :rtype: tuple[ast.Compare, ast.Compare]
+    """
     if not isinstance(expr.ops[0], (ast.Lt, ast.LtE, ast.Gt, ast.GtE)):
-        raise Exception("Only <, <=, > or >= are allowed")
+        raise ValueError("Only <, <=, > or >= are allowed")
     if isinstance(expr.ops[0], ast.GtE):
         expr.left, expr.comparators[0] = expr.comparators[0], expr.left
         expr.ops[0] = ast.LtE()
@@ -68,8 +92,8 @@ class Expressions:
 
 class ParserType(Enum):
     """ParserType
-    "enum type CALCULATOR: Used to calculate using feastol
-    "enum type PARSER: Used to parse an expression and create the correct minlp constraints
+    enum type CALCULATOR: Used to calculate using feastol
+    enum type PARSER: Used to parse an expression and create the correct minlp constraints
     """
     CALCULATOR = "calculator"
     PARSER = "parser"
