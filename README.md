@@ -125,7 +125,7 @@ Location_y == 0.0
 Speed_x == 0.0
 Speed_y == 0.0
 ```
-notice te use of teh constant value defined earlier in the constants file.
+notice the use of the constant value defined earlier in the constants file.
 ### Goals
 The goals file should encode the final state values such that t=H+1, for example
 ```txt
