@@ -10,13 +10,68 @@ from math import exp, log, sqrt, sin, cos, isclose
 
 from pyscipopt.scip import Model, SumExpr
 
-def switch_comparator(comparator):
-    if isinstance(comparator, ast.Eq): return ast.NotEq()
-    if isinstance(comparator, ast.NotEq): return ast.Eq()
-    if isinstance(comparator, ast.Lt): return ast.Gt()
-    if isinstance(comparator, ast.LtE): return ast.GtE()
-    if isinstance(comparator, ast.Gt): return ast.Lt()
-    if isinstance(comparator, ast.GtE): return ast.LtE()
+
+def linearise(expr: ast.Compare, aux_var: Variable) -> tuple[ast.Compare, ast.Compare]:
+    """linearise
+    This function linearises an inequality using an auxilary variable
+    
+    The linearisation process is as follows.
+    If the expression is of the form of E1 <= E2, then we linearise by using the following expressions.
+    z=0 ==> E1 <= E2 and z=1 ==> E1 > E2 (equivalent to E1 >= E2 + feastol). This is then equivalent to,
+    E2 + feastol - M + z*M <= E1 <= E2 + zM.
+    
+    Similarly, for E1 < E2 we have z=0 ==> E1 < E2 which is equivalent to E1 <= E2 - feastol + z*M 
+    and z=1 ==> E1 >= E2.
+    Thus for E1 < E2 we have,
+    E2 + z*M - M <= E1 <= E2 + z*M - feastol.
+    
+    If, however, the inequality is of the form of E1 >= E2 then we evaluate the expression, E2 <= E1.
+    Similarly, if the expression is E1 > E2 then we evaluate the expression E2 < E1.
+    
+    :param expr: An inequality expression which is linearised.
+    :type expr: ast.Compare
+    :param aux_var: An auxiliary variable used when linearising the inequality to determine if the expression is true or false.
+    :type aux_var: Variable
+    :raises ValueError: If expr is not a valid inequality (i.e. doesn't use <, <=, > and >=)
+    :return: both the linearised inequalities
+    :rtype: tuple[ast.Compare, ast.Compare]
+    """
+    if not isinstance(expr.ops[0], (ast.Lt, ast.LtE, ast.Gt, ast.GtE)):
+        raise ValueError("Only <, <=, > or >= are allowed")
+    if isinstance(expr.ops[0], ast.GtE):
+        expr.left, expr.comparators[0] = expr.comparators[0], expr.left
+        expr.ops[0] = ast.LtE()
+    if isinstance(expr.ops[0], ast.Gt):
+        expr.left, expr.comparators[0] = expr.comparators[0], expr.left
+        expr.ops[0] = ast.Lt()
+    
+    if isinstance(expr.ops[0], ast.LtE):
+        lhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"feastol - bigM + {aux_var.name} * bigM").body[0].value
+        )
+        rhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"{aux_var.name} * bigM").body[0].value
+        )
+    if isinstance(expr.ops[0], ast.Lt):
+        lhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"{aux_var.name} * bigM - bigM").body[0].value
+        )
+        rhs = ast.BinOp(
+            left=expr.comparators[0], 
+            op=ast.Add(), 
+            right=ast.parse(f"{aux_var.name} * bigM - feastol").body[0].value
+        )
+    expr1 = ast.Compare(lhs, [ast.LtE()], [expr.left])
+    expr2 = ast.Compare(expr.left, [ast.LtE()], [rhs])
+    return expr1, expr2
+    
+
 
 @dataclass
 class Expressions:
@@ -37,8 +92,8 @@ class Expressions:
 
 class ParserType(Enum):
     """ParserType
-    "enum type CALCULATOR: Used to calculate using feastol
-    "enum type PARSER: Used to parse an expression and create the correct minlp constraints
+    enum type CALCULATOR: Used to calculate using feastol
+    enum type PARSER: Used to parse an expression and create the correct minlp constraints
     """
     CALCULATOR = "calculator"
     PARSER = "parser"
@@ -152,22 +207,11 @@ class ParseModel:
                             aux_vars.append(aux_var)
                             self.variables[aux_var.name] = aux_var.model_var
                             
-                            expr.left = ast.BinOp(
-                                left=expr.left, 
-                                op=(ast.Add() if isinstance(expr.ops[0], (ast.Gt, ast.GtE)) else ast.Sub()), 
-                                right=ast.parse(f"bigM * {aux_var.name}").body[0].value
-                            )
-                            self.expressions.add_expressions(self.evaluate(expr))
+                            expr1, expr2 = linearise(expr, aux_var)
                             
-                            expr.ops[0] = switch_comparator(expr.ops[0])
-                            
-                            expr.comparators[0] = ast.BinOp(
-                                left=expr.comparators[0], 
-                                op=(ast.Add() if isinstance(expr.ops[0], (ast.Gt, ast.GtE)) else ast.Sub()), 
-                                right=ast.parse(f"feastol - bigM").body[0].value
-                            )
-                            
-                            self.expressions.add_expressions(self.evaluate(expr))
+                            self.expressions.add_expressions(self.evaluate(expr1))
+                            self.expressions.add_expressions(self.evaluate(expr2))
+
                         else:
                             raise Exception("or expressions may only be made up of inequalities")
                     lhs = SumExpr()

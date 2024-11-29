@@ -94,6 +94,7 @@ class PlanModel:
                 vtype, name = vtype.strip(), name.strip()
                 
                 self.var_names.add(name)
+                
                 if vtype.startswith("global"):
                     var = Variable.create_var(self.model, name, vtype, "global", self.constants)
                     for t in range(self.config.horizon + 1):
