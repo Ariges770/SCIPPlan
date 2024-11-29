@@ -102,13 +102,17 @@ state_continuous: Location_x
 state_continuous: Location_y
 state_continuous: Speed_x
 state_continuous: Speed_y
+global_boolean: aux_1
 ```
-where the variable and value type of the variable is set in the format "{variable type}_{value type}" and the variable itself has to be in a Python compatible format (e.g. variables can't use - sign like `some-var` but can use _ like `some_var` as well as the dash sign ' cannot be used). The use of next state variables which is often written using the dash symbol will be explained further in the Transitions section.  
+where the variable and value type of the variable is set in the format "{variable type}_{value type}" and the variable itself has to be in a Python compatible format (e.g. variables can't use - symbol like `some-var` but can use _ like `some_var` as well as the dash sign ' cannot be used). The use of next state variables which is often written using the dash symbol will be explained further in the Transitions section.  
 Additionally a variable for Dt has to be defined and has to be the same as the dt_var in the config object so if you would like to use a different variable name for Dt (e.g. dt) please also ensure you add it to the config via the `--dt-var` tag or the `dt_var` parameter.  
+The variable type `global` is used when you would like a non state variable to be equal over every time step over the horizon (e.g. if $v_t$ is a variable at time $t$ and $H$ is the horizon, then $v_1 = v_2 = \dots = v_{H+1}$).  
+
 The available variable types are
 - state
 - action
 - auxiliary
+- global
 
 The available value types are 
 - continuos
