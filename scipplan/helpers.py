@@ -2,7 +2,8 @@ import os
 import csv
 
 from typing import Generator
-from .config import Config
+
+from config import Config
 
 class InfeasibilityError(Exception):
     """Raise this error when there are no valid solutions for the given horizon"""

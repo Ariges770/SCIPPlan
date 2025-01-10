@@ -1,7 +1,7 @@
-from .config import Config
-from .variables import Variable, VarType
-from .parse_model import ParseModel as PM, EvalParams
-from .helpers import list_accessible_files
+from config import Config
+from variables import Variable, VarType
+from parse_model import ParseModel as PM, EvalParams
+from helpers import list_accessible_files
 
 import math
 import os
@@ -9,6 +9,9 @@ import os
 from pyscipopt.scip import Model
 from pkg_resources import parse_version
 from importlib.metadata import version
+from sympy import Eq, Function, Derivative as dd, Symbol, parse_expr
+from sympy.solvers.ode.systems import dsolve_system
+
 
 if parse_version(version("pyscipopt")) >= parse_version("4.3.0"):
     from pyscipopt import quicksum, exp, log, sqrt, sin, cos
@@ -39,7 +42,6 @@ class PlanModel:
             self.model.addCons(dt_var >= 0.0, f"dt_{h}_lower_bound")
             self.model.addCons(dt_var <= self.config.bigM, f"dt_{h}_upper_bound")   
     
-
         
     def encode_constants(self) -> dict[str, float]:
         constants = {}
@@ -111,7 +113,7 @@ class PlanModel:
             "instantaneous_constraints",
             "temporal_constraints",
             "goals",
-            "transitions"
+            "odes" if self.config.use_odes is True else "transitions"
         ]
         translations: dict[str, list[str]] = {}
         for translation in translation_names:
@@ -125,10 +127,23 @@ class PlanModel:
                         continue
                     
                     translations[translation].append(expr)
+
+        if self.config.use_odes is True: 
+            self.ode_functions = self.solve_odes(translations["odes"])
+
+            translations["transitions"] = []
+            for func_name, func in self.ode_functions.items():
+                translations["transitions"].append((func_name + "_dash" + " == " + func))
             
+            del translations["odes"]
+            
+
         # Encode constraints into model
         for cons_idx, (translation, constraints) in enumerate(translations.items()):
             for idx, constraint in enumerate(constraints):
+                if (self.config.use_odes is True) and (translation == "temporal_constraints"):
+                    for func_name, func in self.ode_functions:
+                        constraint = constraint.replace(func_name, func)
                 if translation == "initials":
                     exprs = PM(self.get_parser_params(horizon=0, add_aux_vars=True)).evaluate(constraint, horizon=0, expr_name=f"{translation}_{idx}_0")
                     
@@ -255,3 +270,46 @@ class PlanModel:
         else:
             raise Exception("Unkown file name, please enter a configuration for a valid domain instance in translation: ")
         
+
+    def solve_odes(self, ode_system: list[str]) -> dict[str, str]:
+        dt_var = self.config.dt_var
+
+        dt = Symbol(dt_var)
+        # Used to represent constant variables
+        temp_var = Symbol("TEMP_VAR")
+
+        variables = {}
+        states = []
+
+        for var_name in self.var_names:
+            var = self.variables[(var_name, 0)]
+            if var.var_type is VarType.STATE:
+                states.append(var.name)
+                variables[var.name] = Function(var.name)(dt)
+            elif var.var_type is VarType.CONSTANT:
+                variables[var.name] = self.constants[var.name]
+            else: # the variable is an action or aux variable which is encoded as a function of some unused variable as workaround to not being able to use symbols for constants
+                variables[var.name] = Function(var.name)(temp_var)
+        
+        variables[dt_var] = dt
+        
+        system = []
+        for eqtn in ode_system:
+            lhs, rhs = eqtn.split("==")
+            lhs = parse_expr(lhs.strip(), local_dict=variables | {"dd": dd})
+            rhs = parse_expr(rhs.strip(), local_dict=variables | {"dd": dd})
+            system.append(Eq(lhs, rhs))
+        results = dsolve_system(system, ics={variables[state].subs(dt, 0): state for state in states})
+
+
+
+        functions: dict[str, str] = {}
+        for eqtn in results[0]:
+            new_eqtn = eqtn.doit()
+            func_name = new_eqtn.lhs.name.replace(f"({temp_var.name})", "").replace(f"({self.config.dt_var})", "_dash")
+            functions[func_name] = str(new_eqtn.rhs).replace(f"({temp_var.name})", "").replace(f"({self.config.dt_var})", "_dash")
+        
+        
+        return functions
+
+

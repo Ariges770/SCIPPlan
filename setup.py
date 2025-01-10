@@ -24,6 +24,8 @@ setup(
     install_requires=[
         # "PySCIPOpt>=4.3.0"
         # "pyscipopt>=4.0.0"
+        "PySCIPOpt==5.2.1",
+        "sympy==1.13.3"
     ],
     entry_points={
         'console_scripts': [

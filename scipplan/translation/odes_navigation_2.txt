@@ -1,0 +1,4 @@
+dd(Location_x, Dt) == Speed_x
+dd(Location_y, Dt) == Speed_y
+dd(Speed_x, Dt) == Accelerate_x
+dd(Speed_y, Dt) == Accelerate_y

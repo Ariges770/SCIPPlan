@@ -2,7 +2,7 @@ import ast
 import operator as op
 from typing import Union
 
-from .variables import Variable
+from variables import Variable
 
 from dataclasses import dataclass, field
 from enum import Enum
