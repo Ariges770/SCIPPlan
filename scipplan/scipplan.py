@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import time
 
-from config import Config
-from plan_model import PlanModel
-from variables import VarType
-from zero_crossing import ZeroCrossing
-from parse_model import ParseModel as PM
-from helpers import InfeasibilityError, iterate, write_to_csv
+from .config import Config
+from .plan_model import PlanModel
+from .variables import VarType
+from .zero_crossing import ZeroCrossing
+from .parse_model import ParseModel as PM
+from .helpers import InfeasibilityError, iterate, write_to_csv
 
 from importlib.metadata import version
 from pyscipopt.scip import Model

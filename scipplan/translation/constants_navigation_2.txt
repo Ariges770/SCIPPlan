@@ -1,2 +1,0 @@
-bigM = config_bigM
-Epsilon = config_epsilon

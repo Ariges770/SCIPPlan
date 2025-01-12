@@ -16,7 +16,7 @@ class Config:
     horizon: int = field(default=None)
     epsilon: float = field(default=None)
     gap: float = field(default=None)
-    use_odes: bool = field(default=True)
+    provide_sols: bool = field(default=False)
     show_output: bool = False
     save_sols: bool = False
     bigM: float = 1000.0
@@ -51,7 +51,7 @@ class Config:
         text = f"""
         Configuration:
         
-        Use System of ODE's: {self.use_odes}
+        Use System of ODE's: {not self.provide_sols}
         Display SCIP Output: {self.show_output}
         Save Solutions: {self.show_output}
         Dt Variable Name: {self.dt_var}
@@ -133,10 +133,10 @@ class Config:
         )
         
         parser.add_argument(
-            "--use-odes", 
+            "--provide-sols", 
             action="store_true", 
-            default=True, 
-            help="This flag determines whether the user would like to provide a system of odes or transition functions, odes must be provided by default."
+            default=False, 
+            help="This flag determines whether the user would like to provide a system of odes or solution equations, odes must be provided by default."
         )
 
         parser.add_argument(

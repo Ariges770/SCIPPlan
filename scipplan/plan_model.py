@@ -1,7 +1,7 @@
-from config import Config
-from variables import Variable, VarType
-from parse_model import ParseModel as PM, EvalParams
-from helpers import list_accessible_files
+from .config import Config
+from .variables import Variable, VarType
+from .parse_model import ParseModel as PM, EvalParams
+from .helpers import list_accessible_files
 
 import math
 import os
@@ -30,6 +30,8 @@ class PlanModel:
         # Translation -> line_num -> horizon -> aux
         self.aux_vars: dict[str, list[list[list]]] = {}
         
+        self.file_translations = self.read_translations()
+
         self.constants = self.encode_constants()
         self.variables = self.encode_pvariables()
         self.translations = self.encode_constraints()
@@ -42,7 +44,27 @@ class PlanModel:
             self.model.addCons(dt_var >= 0.0, f"dt_{h}_lower_bound")
             self.model.addCons(dt_var <= self.config.bigM, f"dt_{h}_upper_bound")   
     
+    def read_translations(self) -> dict[str, list[str]]:
+        with open(self.get_file_path("solutions" if self.config.provide_sols else "odes")) as f:
+            translations = {}
+            new_sec = True
+            for line in f:
+                line = line.strip()
+                if line == "":
+                    pass
+                elif line == "---":
+                    new_sec = True
+                elif new_sec is True:
+                    translation = line.removesuffix(":")
+                    translations[translation] = []
+                    new_sec = False
+                else:
+                    translations[translation].append(line)
         
+        return translations
+
+
+
     def encode_constants(self) -> dict[str, float]:
         constants = {}
         translation = "constants"
@@ -55,23 +77,20 @@ class PlanModel:
         }
     
             
-        with open(self.get_file_path(translation)) as f:
-            for line in f.readlines():
-                if line.strip() == "":
-                    continue
-                
-                var, val = line.strip().split("=")
-                var, val = var.strip(), val.strip()
-                
-                val = val if val not in config_vals else config_vals[val]
-                
-                try:
-                    val = float(val)
-                except ValueError:
-                    raise ValueError("Constants can only be floats, please reconfigure: ")
-                
-                constants[var] = val
-                self.var_names.add(var)
+        for line in self.file_translations[translation]:
+
+            var, val = line.split("=")
+            var, val = var.strip(), val.strip()
+            
+            val = val if val not in config_vals else config_vals[val]
+            
+            try:
+                val = float(val)
+            except ValueError:
+                raise ValueError("Constants can only be floats, please reconfigure: ")
+            
+            constants[var] = val
+            self.var_names.add(var)
                 
         constants["bigM"] = self.config.bigM
         self.var_names.add("bigM")
@@ -86,22 +105,21 @@ class PlanModel:
                 var_type = variables[(constant, t)].var_type
                 
         translation = "pvariables"
-        with open(self.get_file_path(translation)) as f:
-            for line in f.readlines():
-                
-                var = line.rstrip("\n").strip()
-                if var == "":
-                    continue
-                vtype, name = var.split(": ")
-                vtype, name = vtype.strip(), name.strip()
-                
-                self.var_names.add(name)
-                
-                for t in range(self.config.horizon):
-                    variables[(name, t)] = Variable.create_var(self.model, name, vtype, t, self.constants)
-                    var_type = variables[(name, t)].var_type
-                if var_type is VarType.STATE:
-                    variables[(name, self.config.horizon)] = Variable.create_var(self.model, name, vtype, self.config.horizon, self.constants)
+        for line in self.file_translations[translation]:
+            
+            var = line.rstrip("\n").strip()
+            if var == "":
+                continue
+            vtype, name = var.split(": ")
+            vtype, name = vtype.strip(), name.strip()
+            
+            self.var_names.add(name)
+            
+            for t in range(self.config.horizon):
+                variables[(name, t)] = Variable.create_var(self.model, name, vtype, t, self.constants)
+                var_type = variables[(name, t)].var_type
+            if var_type is VarType.STATE:
+                variables[(name, self.config.horizon)] = Variable.create_var(self.model, name, vtype, self.config.horizon, self.constants)
                     
         return variables
                 
@@ -113,22 +131,21 @@ class PlanModel:
             "instantaneous_constraints",
             "temporal_constraints",
             "goals",
-            "odes" if self.config.use_odes is True else "transitions"
+            "odes" if self.config.provide_sols is False else "transitions"
         ]
         translations: dict[str, list[str]] = {}
         for translation in translation_names:
             translations[translation] = []
             
-            with open(self.get_file_path(translation)) as f:
-                for line in f.readlines():
-                    expr = line.rstrip("\n").strip()
-                    # If line is empty don't append
-                    if expr == "":
-                        continue
-                    
-                    translations[translation].append(expr)
+            for line in self.file_translations[translation]:
+                expr = line.rstrip("\n").strip()
+                # If line is empty don't append
+                if expr == "":
+                    continue
+                
+                translations[translation].append(expr)
 
-        if self.config.use_odes is True: 
+        if self.config.provide_sols is False: 
             self.ode_functions = self.solve_odes(translations["odes"])
 
             translations["transitions"] = []
@@ -141,9 +158,10 @@ class PlanModel:
         # Encode constraints into model
         for cons_idx, (translation, constraints) in enumerate(translations.items()):
             for idx, constraint in enumerate(constraints):
-                if (self.config.use_odes is True) and (translation == "temporal_constraints"):
-                    for func_name, func in self.ode_functions:
+                if (self.config.provide_sols is False) and (translation == "temporal_constraints"):
+                    for func_name, func in self.ode_functions.items():
                         constraint = constraint.replace(func_name, func)
+                    constraints[idx] = constraint
                 if translation == "initials":
                     exprs = PM(self.get_parser_params(horizon=0, add_aux_vars=True)).evaluate(constraint, horizon=0, expr_name=f"{translation}_{idx}_0")
                     
@@ -180,16 +198,15 @@ class PlanModel:
     def encode_reward(self):
         objectives = [None] * self.config.horizon
         translation = "reward"
-        with open(self.get_file_path(translation)) as f:
-            reward = f.readline().rstrip("\n")
-            for t in range(self.config.horizon):
-                objectives[t] = self.model.addVar(f"Obj_{t}", vtype="C", lb=None, ub=None)
-                # For the sake of similarity the reward is similar to constraint parsing, however, only one reward function is allowed
-                exprs = PM(self.get_parser_params(t)).evaluate(reward)
-                for expr_idx, expr in enumerate(exprs):
-                    self.model.addCons(objectives[t] == expr, f"Obj_{t}_{expr_idx}")
-                
-            self.model.setObjective(quicksum(objectives), "maximize")
+        reward = self.file_translations[translation][0]
+        for t in range(self.config.horizon):
+            objectives[t] = self.model.addVar(f"Obj_{t}", vtype="C", lb=None, ub=None)
+            # For the sake of similarity the reward is similar to constraint parsing, however, only one reward function is allowed
+            exprs = PM(self.get_parser_params(t)).evaluate(reward)
+            for expr_idx, expr in enumerate(exprs):
+                self.model.addCons(objectives[t] == expr, f"Obj_{t}_{expr_idx}")
+            
+        self.model.setObjective(quicksum(objectives), "maximize")
             
         return objectives
             
