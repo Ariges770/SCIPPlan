@@ -1,1 +1,2 @@
-PySCIPOpt==4.3.0
+PySCIPOpt==5.2.1
+sympy==1.13.3

@@ -5,6 +5,7 @@ from .helpers import list_accessible_files
 
 import math
 import os
+import re
 
 from pyscipopt.scip import Model
 from pkg_resources import parse_version
@@ -159,9 +160,12 @@ class PlanModel:
         for cons_idx, (translation, constraints) in enumerate(translations.items()):
             for idx, constraint in enumerate(constraints):
                 if (self.config.provide_sols is False) and (translation == "temporal_constraints"):
-                    for func_name, func in self.ode_functions.items():
-                        constraint = constraint.replace(func_name, func)
+                    # for func_name, func in self.ode_functions.items():
+                    #     constraint = constraint.replace(func_name, func)
+                    pattern = r"|".join(f"({func_name})" for func_name, func in self.ode_functions.items())
+                    constraint = re.sub(pattern, lambda x: self.ode_functions[x.group(0)], constraint)
                     constraints[idx] = constraint
+                    
                 if translation == "initials":
                     exprs = PM(self.get_parser_params(horizon=0, add_aux_vars=True)).evaluate(constraint, horizon=0, expr_name=f"{translation}_{idx}_0")
                     
