@@ -2,11 +2,11 @@ import ast
 import operator as op
 from typing import Union
 
-from .variables import Variable
-
 from dataclasses import dataclass, field
 from enum import Enum
 from math import exp, log, sqrt, sin, cos, isclose
+
+from .variables import Variable
 
 from pyscipopt.scip import Model, SumExpr
 

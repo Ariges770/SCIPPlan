@@ -1,4 +1,5 @@
-from .config import Config
+from .config import Config, TransitionType
+from .data_interpolator import read_func_csv, RBFInterpolator, get_funcs
 from .variables import Variable, VarType
 from .parse_model import ParseModel as PM, EvalParams
 from .helpers import list_accessible_files
@@ -26,7 +27,7 @@ class PlanModel:
         self.config: Config = config
         self.var_names: set[str] = set()
         
-        self.model = Model(f"{config.domain}_{config.instance}_{config.horizon}")
+        self.model = Model(f"{config.domain}_{config.instance}_{config.horizon}_{config.transition_type.name}")
         
         # Translation -> line_num -> horizon -> aux
         self.aux_vars: dict[str, list[list[list]]] = {}
@@ -46,7 +47,7 @@ class PlanModel:
             self.model.addCons(dt_var <= self.config.bigM, f"dt_{h}_upper_bound")   
     
     def read_translations(self) -> dict[str, list[str]]:
-        with open(self.get_file_path("solutions" if self.config.provide_sols else "odes")) as f:
+        with open(self.get_file_path(self.config.transition_type.name.lower())) as f:
             translations = {}
             new_sec = True
             for line in f:
@@ -127,12 +128,14 @@ class PlanModel:
          
          
     def encode_constraints(self) -> dict[str, list[str]]:
+        trans_type_name = self.config.transition_type.name.lower()
         translation_names = [
             "initials",
             "instantaneous_constraints",
             "temporal_constraints",
             "goals",
-            "odes" if self.config.provide_sols is False else "transitions"
+            "transitions" if self.config.transition_type is TransitionType.SOLUTIONS else trans_type_name
+            # "odes" if self.config.provide_sols is False else "transitions"
         ]
         translations: dict[str, list[str]] = {}
         for translation in translation_names:
@@ -146,24 +149,33 @@ class PlanModel:
                 
                 translations[translation].append(expr)
 
-        if self.config.provide_sols is False: 
-            self.ode_functions = self.solve_odes(translations["odes"])
+        if self.config.transition_type is TransitionType.ODES: 
+            self.solved_funcs = self.solve_odes(translations[trans_type_name])
 
             translations["transitions"] = []
-            for func_name, func in self.ode_functions.items():
+            for func_name, func in self.solved_funcs.items():
                 translations["transitions"].append((func_name + "_dash" + " == " + func))
             
-            del translations["odes"]
+            del translations[trans_type_name]
+            
+        if self.config.transition_type is TransitionType.INTERPOLATE:
+            self.solved_funcs = self.interpolate_data(translations[trans_type_name])
+
+            translations["transitions"] = []
+            for func_name, func in self.solved_funcs.items():
+                translations["transitions"].append((func_name + "_dash" + " == " + func))
+            
+            del translations[trans_type_name]
             
 
         # Encode constraints into model
         for cons_idx, (translation, constraints) in enumerate(translations.items()):
             for idx, constraint in enumerate(constraints):
-                if (self.config.provide_sols is False) and (translation == "temporal_constraints"):
-                    # for func_name, func in self.ode_functions.items():
+                if (self.config.transition_type is not TransitionType.SOLUTIONS) and (translation == "temporal_constraints"):
+                    # for func_name, func in self.solved_funcs.items():
                     #     constraint = constraint.replace(func_name, func)
-                    pattern = r"|".join(f"({func_name})" for func_name, func in self.ode_functions.items())
-                    constraint = re.sub(pattern, lambda x: self.ode_functions[x.group(0)], constraint)
+                    pattern = r"|".join(f"({func_name})" for func_name, func in self.solved_funcs.items())
+                    constraint = re.sub(pattern, lambda x: self.solved_funcs[x.group(0)], constraint)
                     constraints[idx] = constraint
                     
                 if translation == "initials":
@@ -274,13 +286,14 @@ class PlanModel:
         return EvalParams.as_calculator(variables, functions, operators, self.model)
     
     
-    def get_file_path(self, translation: str) -> str:
-        path = f"{translation}_{self.config.domain}_{self.config.instance}.txt"
+    def get_file_path(self, translation: str, extension: str = "txt", sub_dirs: list[str] = None) -> str:
+        sub_dirs = [] if sub_dirs is None else sub_dirs
+        path = f"{translation}_{self.config.domain}_{self.config.instance}.{extension}"
         
-        usr_files_path = os.path.join("./", "translation")
+        usr_files_path = os.path.join("./", *sub_dirs, "translation")
         usr_files = list_accessible_files(usr_files_path)
         
-        pkg_files_path = os.path.join(os.path.dirname(__file__), "translation")
+        pkg_files_path = os.path.join(os.path.dirname(__file__), "translation", *sub_dirs)
         pkg_files = list_accessible_files(pkg_files_path)
         
         
@@ -289,6 +302,7 @@ class PlanModel:
         elif path in pkg_files:
             return os.path.join(pkg_files_path, path)
         else:
+            print(f"DEBUG: {os.path.join(usr_files_path, path) = }\n{os.path.join(pkg_files_path, path) = }")
             raise Exception("Unkown file name, please enter a configuration for a valid domain instance in translation: ")
         
 
@@ -332,5 +346,16 @@ class PlanModel:
         
         
         return functions
+    def interpolate_data(self, funcs: list[str] = None) -> None:
+        if funcs is None:
+            raise ValueError("Interpolation requires a list of functions to interpolate")
+        
+        interpolated_funcs: dict[str, str] = {}
+        for func_name in funcs:
+            path = self.get_file_path(func_name, "csv", ["data"])
+            headers, yobs, xobs = read_func_csv(path)
+            rbf_obj = RBFInterpolator(xobs, yobs, kernel="cubic")
+            func = get_funcs(rbf_obj, headers)[0]
+            interpolated_funcs[func_name] = func
 
-
+        return interpolated_funcs

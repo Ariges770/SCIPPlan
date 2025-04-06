@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import argparse
+
 from dataclasses import dataclass, field
 from textwrap import dedent
-import argparse
+from enum import Enum
+
+
+class TransitionType(Enum):
+    SOLUTIONS = 0
+    ODES = 1
+    INTERPOLATE = 2
 
 @dataclass
 class Config:
@@ -16,7 +24,7 @@ class Config:
     horizon: int = field(default=None)
     epsilon: float = field(default=None)
     gap: float = field(default=None)
-    provide_sols: bool = field(default=False)
+    transition_type: TransitionType = field(default=1)
     show_output: bool = False
     save_sols: bool = False
     bigM: float = 1000.0
@@ -46,12 +54,15 @@ class Config:
             print("Gap is not provided, and is set to 10.0%. ")
             self.gap = 0.1
             self._defaults["gap"] = True
+        
+        self.transition_type = TransitionType(self.transition_type)
             
     def __str__(self) -> str:
+        
         text = f"""
         Configuration:
         
-        Use System of ODE's: {not self.provide_sols}
+        Using Transition Type: {self.transition_type.name.lower().capitalize()}
         Display SCIP Output: {self.show_output}
         Save Solutions: {self.show_output}
         Dt Variable Name: {self.dt_var}
@@ -133,13 +144,6 @@ class Config:
         )
         
         parser.add_argument(
-            "--provide-sols", 
-            action="store_true", 
-            default=False, 
-            help="This flag determines whether the user would like to provide a system of odes or solution equations, odes must be provided by default."
-        )
-
-        parser.add_argument(
             "--show-output", 
             action="store_true", 
             default=False, 
@@ -152,11 +156,17 @@ class Config:
             default=False, 
             help="Include this flag to save the solutions from each of the scipplan iterations as well as constraints generated (note, only saves for horizon which has been solved)."
         )
+        parser.add_argument(
+            "--transition-type", 
+            required=False,
+            default=0,
+            type=int,
+            help="0 for exact solution equations, 1 for system of odes, 2 for data to be interpolated."
+        )
         
         args = parser.parse_args()
         
         return Config(**vars(args))
-    
     
 if __name__ == "__main__":
     
