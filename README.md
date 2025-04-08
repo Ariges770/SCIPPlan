@@ -63,16 +63,16 @@ write_to_csv("results", plan.results_table, config)
 
 
 ## Custom Domains
-If you would like to create your own domain you will need to create a directory named "translation" in the directory which scipplan is run from with txt files of the format "{translation type}\_{domain name}\_{instance number}.txt" (e.g. "pvariables_navigation_1.txt"). Note that the files in the translation directory will override any example files if they share domain name and instance number (e.g. navigation 1 would override the example).
+If you would like to create your own domain you will need to create a directory named "translation" in the directory which scipplan is run from with txt files of the format "{domain_type}\_{domain name}\_{instance number}.txt" (e.g. "odes_navigation_1.txt", with available domain types, `odes` and `solutions`). Note that the files in the translation directory will override any example files if they share domain name and instance number (e.g. `solutions_navigation_1` would override the example).
 
-For each domain instance the following translation files are required
+This file contains sections for the various translations listed, these sections are separated by `---` and contain a header which is the name of the section (e.g. `pvariables:`). The required sections are as follows
 - constants
 - pvariables
+- transitions (for `solutions`)/odes (for `odes`)
 - initials
 - goals
 - instantaneous_constraints
 - temporal_constraints
-- transitions
 - reward
 
 As a part of SCIPPlan, all the constraint files allow for the use of "and" and "or" expressions, polynomials and `exp`, `log`, `sqrt`, `sin` and `cos` functions (Note: `sin` and `cos` are only available in PySCIPOpt>=4.3.0 so if your version is below that you will not be able to use the trig functions unless you update).
@@ -80,6 +80,7 @@ As a part of SCIPPlan, all the constraint files allow for the use of "and" and "
 ### Constants
 The constants file allows for constant values to be defined as a variable to be used in other files in the model. To use add constants as follows
 ```txt
+constants:
 HalfVal = 0.5
 Epsilon = config_epsilon
 bigM = config_bigM
@@ -94,6 +95,7 @@ Note that these variables are only accessible in the constants file and you will
 ### Pvariables
 When creating the pvariables file, the variables should be listed in the following format
 ```txt
+pvariables:
 action_continuous: Accelerate_x
 action_continuous: Accelerate_y
 action_continuous: Dt
@@ -115,11 +117,40 @@ The available value types are
 - integer 
 - boolean 
 
-Please note that constants don't need to have their variable names defined in pvariables as they are defined in constants.
+Please note that constants don't need to have their variable names defined in pvariables as they are defined in constants.  
+
+### Transitions (For Solutions)
+Transitions are to be added here with the following syntax.  
+For example $S_{t+1} = \frac 12 A_t\cdot t^2 + V_t\cdot t + S_t$.  
+Alternatively this can be written as $S' = \frac 12 A\cdot t^2 + V\cdot t + S$.
+Since Python doesn't allow variables to use the ' symbol it should be replaced with `_dash`, for example
+```txt
+transitions:
+Location_x_dash - 1.0*Location_x - 1.0*Speed_x*(Dt + Epsilon*Mode) - 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
+Location_y_dash - 1.0*Location_y - 1.0*Speed_y*(Dt + Epsilon*Mode) - 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
+Speed_x_dash - 1.0*Speed_x - 1.0*Accelerate_x*(Dt + Epsilon*Mode) == 0.0
+Speed_y_dash - 1.0*Speed_y - 1.0*Accelerate_y*(Dt + Epsilon*Mode) == 0.0
+```
+
+### ODEs (For ODEs)
+When providing a system of odes to be solved, they are to be provided as follows
+```txt
+odes:
+dd(Location_x, Dt) == Speed_x
+dd(Location_y, Dt) == Speed_y
+dd(Speed_x, Dt) == Accelerate_x
+dd(Speed_y, Dt) == Accelerate_y
+```  
+
+Note that `dd(y(t), t)` is equivalent to $\frac{\partial y(t)}{\partial t}$.
+
+Additionally, since we utilise SymPy to solve the system of odes, be aware of which systems have a solution which SymPy can solve for.  
+
 
 ### Initials
 The initials file defines the initial state values for time t=0, for example
 ```txt
+initials:
 Location_x == 0.0
 Location_y == 0.0
 Speed_x == 0.0
@@ -129,6 +160,7 @@ notice te use of teh constant value defined earlier in the constants file.
 ### Goals
 The goals file should encode the final state values such that t=H+1, for example
 ```txt
+goals:
 Location_x == 8.0
 Location_y == 8.0
 ```
@@ -136,6 +168,7 @@ Location_y == 8.0
 This is where the instantaneous constraints go.
 An example is as follows
 ```txt
+instantaneous_constraints:
 Location_x <= 10.0
 Location_y <= 10.0
 Location_x >= 0.0
@@ -149,6 +182,7 @@ Accelerate_y >= -0.5
 ### Temporal Constraints
 The temporal constraints are the constraints which SCIPPlan will ensure that the solution never violates by iterating through every epsilon value of Dt and checking for zero crossings. An example of a temporal constraint is as follows
 ```txt
+temporal_constraints:
 Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
 Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) <= 10.0
 Location_x + Speed_x*(Dt + Epsilon*Mode) + 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 0.0
@@ -160,22 +194,21 @@ Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*
 (Location_y + Speed_y*(Dt + Epsilon*Mode) + 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) >= 6.0))
 ```
 
-The use of mode switches are used in these constraints (`Dt + Epsilon*Mode`). Please note that the or expression is enclosed in round brackets which allows the constraints to be parsed as a singular expression
-### Transitions
-Transitions are to be added here with the following syntax.  
-For example $S_{t+1} = \frac 12 A_t\cdot t^2 + V_t\cdot t + S_t$.  
-Alternatively this can be written as $S' = \frac 12 A\cdot t^2 + V\cdot t + S$.
-Since Python doesn't allow variables to use the ' symbol it should be replaced with `_dash`, for example
+The use of mode switches are used in these constraints (`Dt + Epsilon*Mode`). Please note that the or expression is enclosed in round brackets which allows the constraints to be parsed as a singular expression.  
+
+Furthermore, when providing a system of odes over solution equations, the state variable can be used in this file and it is later substituted with the solution equations. For example
 ```txt
-Location_x_dash - 1.0*Location_x - 1.0*Speed_x*(Dt + Epsilon*Mode) - 0.5*Accelerate_x*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
-Location_y_dash - 1.0*Location_y - 1.0*Speed_y*(Dt + Epsilon*Mode) - 0.5*Accelerate_y*(Dt + Epsilon*Mode)*(Dt + Epsilon*Mode) == 0.0
-Speed_x_dash - 1.0*Speed_x - 1.0*Accelerate_x*(Dt + Epsilon*Mode) == 0.0
-Speed_y_dash - 1.0*Speed_y - 1.0*Accelerate_y*(Dt + Epsilon*Mode) == 0.0
-```
+temporal_constraints:
+Location_x <= 10.0
+Location_y <= 10.0
+Location_x >= 0.0
+Location_y >= 0.0
+```  
 
 ### Reward
 As for the reward function, SCIPPlan maximises the reward thus if using a cost function it should be negated as per the example
 ```txt
+reward:
 -1.0*(Dt + Mode * Epsilon)
 ```
 Only one reward function is able to be optimised for in SCIPPlan
