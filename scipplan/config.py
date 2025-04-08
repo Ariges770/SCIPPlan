@@ -16,6 +16,7 @@ class Config:
     horizon: int = field(default=None)
     epsilon: float = field(default=None)
     gap: float = field(default=None)
+    provide_sols: bool = field(default=False)
     show_output: bool = False
     save_sols: bool = False
     bigM: float = 1000.0
@@ -50,6 +51,7 @@ class Config:
         text = f"""
         Configuration:
         
+        Use System of ODE's: {not self.provide_sols}
         Display SCIP Output: {self.show_output}
         Save Solutions: {self.show_output}
         Dt Variable Name: {self.dt_var}
@@ -80,14 +82,14 @@ class Config:
             "--domain", 
             required=True,
             type=str,
-            help="This variable is the name of the domain (e.g. pandemic or navigation)"
+            help="This variable is the name of the domain (e.g. pandemic or navigation)."
         )
         parser.add_argument(
             "-I", 
             "--instance", 
             required=True,
             type=str,
-            help="This is the instance number of the domain (e.g. navigation has instances 1, 2 and 3)"
+            help="This is the instance number of the domain (e.g. navigation has instances 1, 2 and 3)."
         )
         parser.add_argument(
             "-H", 
@@ -95,7 +97,7 @@ class Config:
             required=False,
             # default=1,
             type=int,
-            help="The initial horizon. The solve method will initially begin with this horizon until it finds a feasible solution"
+            help="The initial horizon. The solve method will initially begin with this horizon until it finds a feasible solution."
         )
         parser.add_argument(
             "-E", 
@@ -103,7 +105,7 @@ class Config:
             required=False,
             # default=0.1,
             type=float,
-            help="SCIPPlan iteratively checks solution for violations at each epsilon value"
+            help="SCIPPlan iteratively checks solution for violations at each epsilon value."
         )
         parser.add_argument(
             "-G", 
@@ -111,7 +113,7 @@ class Config:
             required=False,
             # default=0.1,
             type=float,
-            help="SCIP will search for solution with an optimality gap by at least this value"
+            help="SCIP will search for solution with an optimality gap by at least this value."
         )
         
         parser.add_argument(
@@ -119,7 +121,7 @@ class Config:
             required=False,
             default=1000.0,
             type=float,
-            help="A large value which is used for some constraint encoding formulations, defaults to 1000.0 and can be changed as needed"
+            help="A large value which is used for some constraint encoding formulations, defaults to 1000.0 and can be changed as needed."
         )
         
         parser.add_argument(
@@ -127,21 +129,28 @@ class Config:
             required=False,
             default="Dt",
             type=str,
-            help="When writing the constraints, dt_var is the variable name for Dt, defaults to 'Dt' and can be changed based on users preference (e.g. 'dt')"
+            help="When writing the constraints, dt_var is the variable name for Dt, defaults to 'Dt' and can be changed based on users preference (e.g. 'dt')."
         )
         
+        parser.add_argument(
+            "--provide-sols", 
+            action="store_true", 
+            default=False, 
+            help="This flag determines whether the user would like to provide a system of odes or solution equations, odes must be provided by default."
+        )
+
         parser.add_argument(
             "--show-output", 
             action="store_true", 
             default=False, 
-            help="Include this flag to show output from SCIP"
+            help="Include this flag to show output from SCIP."
         )
         
         parser.add_argument(
             "--save-sols", 
             action="store_true", 
             default=False, 
-            help="Include this flag to save the solutions from each of the scipplan iterations as well as constraints generated (note, only saves for horizon which has been solved)"
+            help="Include this flag to save the solutions from each of the scipplan iterations as well as constraints generated (note, only saves for horizon which has been solved)."
         )
         
         args = parser.parse_args()

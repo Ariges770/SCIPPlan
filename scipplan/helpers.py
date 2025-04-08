@@ -2,6 +2,7 @@ import os
 import csv
 
 from typing import Generator
+
 from .config import Config
 
 class InfeasibilityError(Exception):

@@ -46,6 +46,8 @@ class SCIPPlan:
     def optimize(self):
         iteration = 0
         
+        const_gen_aux_vars = [[None] * self.config.horizon for _ in range(len(self.plan.translations["temporal_constraints"]))]
+
         while True:
             self.scip_model.optimize()
             
@@ -80,10 +82,15 @@ class SCIPPlan:
             
             for idx, constraint in enumerate(self.plan.translations["temporal_constraints"]):
                 t = zero_cross.horizon
-                aux_vars = self.plan.aux_vars["temporal_constraints"][idx][t]
-                params = self.plan.get_parser_params(horizon=t)
+                # aux_vars = self.plan.aux_vars["temporal_constraints"][idx][t]
+                aux_vars = const_gen_aux_vars[idx][t]
+                # Only add aux vars if there are no aux vars added for the secific constraint
+                params = self.plan.get_parser_params(horizon=t, add_aux_vars=aux_vars is None)
                 params.variables[self.config.dt_var] *= zero_cross.coef
                 exprs = PM(params).evaluate(constraint, aux_vars=aux_vars)
+                if const_gen_aux_vars[idx][t] is None:
+                    const_gen_aux_vars[idx][t] = exprs.aux_vars
+                    
                 for eqtn_idx, eqtn in enumerate(exprs):
                     self.plan.model.addCons(eqtn, f"{constraint}_{idx}_{eqtn_idx}")
             

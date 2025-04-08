@@ -1,0 +1,50 @@
+constants:
+Epsilon = config_epsilon
+bigM = config_bigM
+---
+pvariables:
+action_continuous: Accelerate_x
+action_continuous: Accelerate_y
+action_continuous: Dt
+state_continuous: Location_x
+state_continuous: Location_y
+state_continuous: Speed_x
+state_continuous: Speed_y
+---
+odes:
+dd(Location_x, Dt) == Speed_x
+dd(Location_y, Dt) == Speed_y
+dd(Speed_x, Dt) == Accelerate_x
+dd(Speed_y, Dt) == Accelerate_y
+---
+initials:
+Location_x == 0.0
+Location_y == 0.0
+Speed_x == 0.0
+Speed_y == 0.0
+---
+instantaneous_constraints:
+Location_x <= 10.0
+Location_y <= 10.0
+Location_x >= 0.0
+Location_y >= 0.0
+Accelerate_x <= 0.5
+Accelerate_y <= 0.5
+Accelerate_x >= -0.5
+Accelerate_y >= -0.5
+(Location_x <= 4.0) or (Location_x >= 6.0) or (Location_y <= 4.0) or (Location_y >= 6.0)
+---
+temporal_constraints:
+Location_x <= 10.0
+Location_y <= 10.0
+Location_x >= 0.0
+Location_y >= 0.0
+
+(Location_x <= 4.0) or (Location_x >= 6.0) or (Location_y <= 4.0) or (Location_y >= 6.0)
+---
+goals:
+Location_x == 8.0
+Location_y == 8.0
+---
+reward:
+-1.0*(Dt)

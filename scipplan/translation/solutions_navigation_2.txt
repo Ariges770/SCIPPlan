@@ -1,0 +1,51 @@
+constants:
+Epsilon = config_epsilon
+bigM = config_bigM
+---
+pvariables:
+action_continuous: Accelerate_x
+action_continuous: Accelerate_y
+action_continuous: Dt
+state_continuous: Location_x
+state_continuous: Location_y
+state_continuous: Speed_x
+state_continuous: Speed_y
+---
+transitions:
+Location_x_dash - 1.0*Location_x - 1.0*Speed_x*(Dt) - 0.5*Accelerate_x*(Dt)*(Dt) == 0.0
+Location_y_dash - 1.0*Location_y - 1.0*Speed_y*(Dt) - 0.5*Accelerate_y*(Dt)*(Dt) == 0.0
+Speed_x_dash - 1.0*Speed_x - 1.0*Accelerate_x*(Dt) == 0.0
+Speed_y_dash - 1.0*Speed_y - 1.0*Accelerate_y*(Dt) == 0.0
+---
+initials:
+Location_x == 0.0
+Location_y == 0.0
+Speed_x == 0.0
+Speed_y == 0.0
+---
+instantaneous_constraints:
+Location_x <= 10.0
+Location_y <= 10.0
+Location_x >= 0.0
+Location_y >= 0.0
+Accelerate_x <= 0.5
+Accelerate_y <= 0.5
+Accelerate_x >= -0.5
+Accelerate_y >= -0.5
+(Location_x <= 2.0) or (Location_x >= 4.0) or (Location_y <= 1.0) or (Location_y >= 5.0)
+(Location_x <= 5.0) or (Location_x >= 7.0) or (Location_y <= 5.0) or (Location_y >= 9.0)
+---
+temporal_constraints:
+Location_x + Speed_x*(Dt) + 0.5*Accelerate_x*(Dt)*(Dt) <= 10.0
+Location_y + Speed_y*(Dt) + 0.5*Accelerate_y*(Dt)*(Dt) <= 10.0
+Location_x + Speed_x*(Dt) + 0.5*Accelerate_x*(Dt)*(Dt) >= 0.0
+Location_y + Speed_y*(Dt) + 0.5*Accelerate_y*(Dt)*(Dt) >= 0.0
+(Location_x + Speed_x*(Dt) + 0.5*Accelerate_x*(Dt)*(Dt) <= 2.0) or (Location_x + Speed_x*(Dt) + 0.5*Accelerate_x*(Dt)*(Dt) >= 4.0) or (Location_y + Speed_y*(Dt) + 0.5*Accelerate_y*(Dt)*(Dt) <= 1.0) or (Location_y + Speed_y*(Dt) + 0.5*Accelerate_y*(Dt)*(Dt) >= 5.0)
+(Location_x + Speed_x*(Dt) + 0.5*Accelerate_x*(Dt)*(Dt) <= 5.0) or (Location_x + Speed_x*(Dt) + 0.5*Accelerate_x*(Dt)*(Dt) >= 7.0) or (Location_y + Speed_y*(Dt) + 0.5*Accelerate_y*(Dt)*(Dt) <= 5.0) or (Location_y + Speed_y*(Dt) + 0.5*Accelerate_y*(Dt)*(Dt) >= 9.0)
+---
+goals:
+Location_x == 8.0
+Location_y == 8.0
+---
+reward:
+-1.0*(Dt)
