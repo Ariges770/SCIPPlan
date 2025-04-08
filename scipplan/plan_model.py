@@ -160,8 +160,6 @@ class PlanModel:
         for cons_idx, (translation, constraints) in enumerate(translations.items()):
             for idx, constraint in enumerate(constraints):
                 if (self.config.provide_sols is False) and (translation == "temporal_constraints"):
-                    # for func_name, func in self.ode_functions.items():
-                    #     constraint = constraint.replace(func_name, func)
                     pattern = r"|".join(f"({func_name})" for func_name, func in self.ode_functions.items())
                     constraint = re.sub(pattern, lambda x: self.ode_functions[x.group(0)], constraint)
                     constraints[idx] = constraint
@@ -297,7 +295,7 @@ class PlanModel:
 
         dt = Symbol(dt_var)
         # Used to represent constant variables
-        temp_var = Symbol("TEMP_VAR")
+        temp_var = Symbol("ODES_TEMP_VAR")
 
         variables = {}
         states = []
